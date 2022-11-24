@@ -14,7 +14,7 @@ def save_df_as_csv(df):
     :return: None
     """
 
-    df.to_csv('data/cash_news.csv', index=False)
+    df.to_csv('src/data/cash_news.csv', index=False)
     
 def save_df_as_feather(df):
     """
@@ -25,7 +25,7 @@ def save_df_as_feather(df):
     :return: None
     """
 
-    df.to_feather('data/cash_news.feather')
+    df.to_feather('src/data/cash_news.feather')
 
 ############################################################################################################
 #############################################  Loading  ####################################################
@@ -39,8 +39,8 @@ def load_df_from_csv():
     """
     
     # check if file exists and return empty dataframe otherwise
-    if os.path.isfile('data/cash_news.csv'):
-        return pd.read_csv('data/cash_news.csv')
+    if os.path.isfile('src/data/cash_news.csv'):
+        return pd.read_csv('src/data/cash_news.csv')
     else:
         return pd.DataFrame()
 
@@ -52,7 +52,7 @@ def load_df_from_feather():
     """
 
     # check if file exists and return empty dataframe otherwise
-    if os.path.isfile('data/cash_news.feather'):
-        return pd.read_feather('data/cash_news.feather')
+    if os.path.isfile('src/data/cash_news.feather'):
+        return pd.read_feather('src/data/cash_news.feather')
     else:
         return pd.DataFrame()
