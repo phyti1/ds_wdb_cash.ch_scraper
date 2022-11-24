@@ -1,3 +1,9 @@
+import pandas as pd
+import os
+
+############################################################################################################
+#############################################  Saving  ####################################################
+############################################################################################################
 
 def save_df_as_csv(df):
     """
@@ -20,3 +26,33 @@ def save_df_as_feather(df):
     """
 
     df.to_feather('data/cash_news.feather')
+
+############################################################################################################
+#############################################  Loading  ####################################################
+############################################################################################################
+
+def load_df_from_csv():
+    """
+    Load pandas dataframe from csv
+
+    :return: pandas dataframe
+    """
+    
+    # check if file exists and return empty dataframe otherwise
+    if os.path.isfile('data/cash_news.csv'):
+        return pd.read_csv('data/cash_news.csv')
+    else:
+        return pd.DataFrame()
+
+def load_df_from_feather():
+    """
+    Load pandas dataframe from feather
+
+    :return: pandas dataframe
+    """
+
+    # check if file exists and return empty dataframe otherwise
+    if os.path.isfile('data/cash_news.feather'):
+        return pd.read_feather('data/cash_news.feather')
+    else:
+        return pd.DataFrame()
