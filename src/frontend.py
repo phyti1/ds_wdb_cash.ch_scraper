@@ -86,11 +86,16 @@ def scrape_cash_ch():
   driver = init_selenium(buffer_timeout_s)
 
   # initial setup
-  df = pd.DataFrame()
+  df = backend.load_df_from_csv()
   pb = ProgressBar(total=100, decimals=3, length=50)
 
+  # find next page id to scrape  
+  max_page = 1
+  if(df.shape[0] > 0):
+    max_page = int(df['i_page'].max() + 1)
+
   # scrape data
-  for i_page in range(1, max_pages):
+  for i_page in range(max_page, max_pages):
     url = f"https://www.cash.ch/news/alle?page={i_page}"
     try:
       df_page = read_data_from_url(driver, url, i_page)
