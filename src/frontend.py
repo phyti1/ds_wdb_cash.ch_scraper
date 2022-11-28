@@ -1,27 +1,17 @@
 
-import os
 import time
-import json
 import traceback
-import random
-import datetime
 import backend
-
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+import pandas as pd
+
 # Adds chromedriver binary to path
 import chromedriver_binary
 from console_progressbar import ProgressBar
 
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import pandas as pd
 
 
 def init_selenium(timeout):
@@ -34,14 +24,31 @@ def init_selenium(timeout):
   """
 
   driver = webdriver.Chrome()
+
+  # wait for the driver to start the browser
   time.sleep(timeout)
+
   return driver
 
 
-def read_data_from_url(driver, url, i_page):
-  page_load_timeout_s = 2
+def read_data_from_url(driver, url, i_page, page_load_timeout_s = 2):
+  
+  """
+  Read all news articles from a page
+
+  :param driver: selenium driver instance
+  :param url: url to scrape
+  :param i_page: page number
+  :param page_load_timeout_s: timeout in seconds to wait for the page to load
+
+  :return: pandas dataframe with all news articles from the page
+  """
+
+  #  create empty dataframe
   df_page = pd.DataFrame()
+
   i_article = -1
+
   try:
     driver.get(url)
     
@@ -52,21 +59,25 @@ def read_data_from_url(driver, url, i_page):
 
     # get hrefs and text of articles
     news = driver.find_elements(By.CLASS_NAME, main_title_tag)
-    if(len(news) == 0):
-        raise Exception("no news articles found")
+    if len(news) == 0:
+        raise Exception("No news articles found")
 
+    # iterate through the news articles and extract the data
     for i_article, news_article in enumerate(news):
+      
+      # fill the dataframe with the data
       df_page.loc[i_article, "i_page"] = i_page
       df_page.loc[i_article, "href"] = news_article.find_element(By.CLASS_NAME, "_2PHmKV2J").get_attribute("href")
-      try:
-        df_page.loc[i_article, "teaser"] = news_article.find_element(By.CLASS_NAME, "_2TpfbHst").get_attribute("innerText")
-      except:
-        df_page.loc[i_article, "teaser"] = ""
-        print(f"<{url}>, article <{i_article}>. No Teaser present.")
-      
       df_page.loc[i_article, "title"] = news_article.find_element(By.CLASS_NAME, "_1w8f1Lsk").get_attribute("innerText")
       df_page.loc[i_article, "date"] = news_article.find_element(By.CLASS_NAME, "_2kyH0Dhp").get_attribute("innerText")
       df_page.loc[i_article, "category"] = news_article.find_element(By.CLASS_NAME, "_25SLsqeV").get_attribute("innerText")
+
+      #  check if the article has a teaser and extract it, else set to empty string (not all articles have a teaser)
+      if news_article.find_element(By.CLASS_NAME, "_2TpfbHst") and news_article.find_element(By.CLASS_NAME, "_2TpfbHst").get_attribute("innerText"):
+        df_page.loc[i_article, "teaser"] = news_article.find_element(By.CLASS_NAME, "_2TpfbHst").get_attribute("innerText")
+      else:
+        df_page.loc[i_article, "teaser"] = ""
+        print(f"<{url}>, article <{i_article}>. No Teaser present.")
     
     return df_page
 
@@ -76,11 +87,18 @@ def read_data_from_url(driver, url, i_page):
     raise e
     
 
-def scrape_cash_ch():
-  buffer_timeout_s = 1
-  max_fails = 3
+def scrape_cash_ch(buffer_timeout_s = 1, max_fails = 3, max_pages = 12350):
+  """
+  Scrapes cash.ch for news articles and saves them to a csv file
+  Stops when max number of pages is reached or if there are more than max fails in a row
+
+  :param buffer_timeout_s: timeout in seconds to wait for the driver to start the browser
+  :param max_fails: maximum number of fails in a row before stopping
+  :param max_pages: maximum number of pages to scrape
+  """
+
+  # set fails to 0 
   fails = 0
-  max_pages = 12350
 
   # initialize service
   driver = init_selenium(buffer_timeout_s)
@@ -94,20 +112,28 @@ def scrape_cash_ch():
   if(df.shape[0] > 0):
     max_page = int(df['i_page'].max() + 1)
 
-  # scrape data
+  # iterate through the pages
   for i_page in range(max_page, max_pages):
     url = f"https://www.cash.ch/news/alle?page={i_page}"
+
+    # catch if a page fails
     try:
-      df_page = read_data_from_url(driver, url, i_page)
+      # set fails to 0 if page is scraped successfully
       fails = 0
+
+      df_page = read_data_from_url(driver, url, i_page)
       df = pd.concat([df, df_page], axis=0)
 
-      # save, overwrite data
-      backend.save_df_as_csv(df)
+      # print a progress bar to the console
       pb.print_progress_bar(i_page / max_pages * 100)
+
+      # save the dataframe after every page, so that we don't lose data if the program crashes
+      backend.save_df_as_csv(df)
+
     except:
+      # count fails and break if max fails reached in a row
       fails += 1
-      if(fails > max_fails):
+      if fails > max_fails:
         break
 
 
