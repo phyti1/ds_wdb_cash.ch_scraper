@@ -1,12 +1,12 @@
 
 import time
-import traceback
 import backend
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import pandas as pd
+import logging
 
 # Adds chromedriver binary to path
 import chromedriver_binary
@@ -27,6 +27,8 @@ def init_selenium(timeout):
 
   # wait for the driver to start the browser
   time.sleep(timeout)
+
+  logging.info("Driver initialized")
 
   return driver
 
@@ -60,7 +62,8 @@ def read_data_from_url(driver, url, i_page, page_load_timeout_s = 2):
     # get hrefs and text of articles
     news = driver.find_elements(By.CLASS_NAME, main_title_tag)
     if len(news) == 0:
-        raise Exception("No news articles found")
+        logging.warning(f"No news found on page {i_page}")
+        return
 
     # iterate through the news articles and extract the data
     for i_article, news_article in enumerate(news):
@@ -77,13 +80,12 @@ def read_data_from_url(driver, url, i_page, page_load_timeout_s = 2):
         df_page.loc[i_article, "teaser"] = news_article.find_element(By.CLASS_NAME, "_2TpfbHst").get_attribute("innerText")
       else:
         df_page.loc[i_article, "teaser"] = ""
-        print(f"<{url}>, article <{i_article}>. No Teaser present.")
+        logging.warning(f"<{url}>, article <{i_article}>. No Teaser present.")
     
     return df_page
 
   except Exception as e:
-    print(e)
-    print(f"<{url}>, article <{i_article}>. Error: {traceback.print_exc()}")
+    logging.error(f"<{url}>, article <{i_article}>. Error: {e}")
     raise e
     
 
@@ -131,12 +133,21 @@ def scrape_cash_ch(buffer_timeout_s = 1, max_fails = 3, max_pages = 12350):
       backend.save_df_as_csv(df)
 
     except:
+      logging.warning(f"Failed to scrape page {i_page}")
+
       # count fails and break if max fails reached in a row
       fails += 1
       if fails > max_fails:
-        break
+        logging.warning("Max fails reached. Stopping.")
+        return
+
+  logging.info("Finished scraping")
+
+if __name__ == '__main__':
+
+  # set logging config (see https://docs.python.org/3/howto/logging.html for more info)
+  logging.basicConfig(filename='scrape.log', encoding='utf-8', level=logging.INFO)
 
 
-if(__name__ == '__main__'):
   scrape_cash_ch()
 
