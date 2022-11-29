@@ -19,5 +19,5 @@ Mit Natural Language Processing oder ähnlichem könnte man noch weiter gehen un
 ## Wie das Skript die Nachrichten ausliest
 html, xpath, regex?
 
-## Gesammelte Daten
-Interessante fiindings?
+## Datenanalyse
+Unsere Datenanalyse ist in data-analysis.ipynb zu sehen.
