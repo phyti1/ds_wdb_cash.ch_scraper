@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import pandas as pd
 import logging
+import logging.config
 
 # Adds chromedriver binary to path
 import chromedriver_binary
@@ -131,7 +132,7 @@ def scrape_cash_ch(buffer_timeout_s = 1, max_fails = 3, max_pages = 12350):
 
       # save the dataframe after every page, so that we don't lose data if the program crashes
       backend.save_df_as_csv(df)
-
+      logging.info(f"Page {i_page} scraped successfully.")
     except:
       logging.warning(f"Failed to scrape page {i_page}")
 
@@ -146,8 +147,11 @@ def scrape_cash_ch(buffer_timeout_s = 1, max_fails = 3, max_pages = 12350):
 if __name__ == '__main__':
 
   # set logging config (see https://docs.python.org/3/howto/logging.html for more info)
+  logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': True, 
+  })
   logging.basicConfig(filename='scrape.log', encoding='utf-8', level=logging.INFO)
-
 
   scrape_cash_ch()
 

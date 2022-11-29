@@ -22,6 +22,9 @@ pipenv uninstall chromedriver-binary
 pipenv install chromedriver-binary==neueVersion
 ```
 
+Die Daten sind bereits geladen und liegen unter: ```src/data/cash_news.csv```.
+Um die Daten neu zu laden, muss diese Datei vor Ausführung gelöscht werden.
+
 Um das Programm zu starten, muss folgender Befehl ausgeführt werden:
 
 ```
