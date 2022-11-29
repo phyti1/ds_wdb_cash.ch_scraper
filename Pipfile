@@ -10,8 +10,13 @@ pandas = "*"
 chromedriver-binary = "==107.0.5304.62.0"
 console-progressbar = "*"
 requests = "*"
+seaborn = "*"
+nltk = "*"
+wordcloud = "*"
+matplotlib = "*"
 
 [dev-packages]
+ipykernel = "*"
 
 [requires]
 python_version = "3.9"
